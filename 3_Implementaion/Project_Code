@@ -1,0 +1,295 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+// Set the LCD address to 0x27 for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+#include <Servo.h>
+
+Servo myservo;
+
+int relay1=2; 
+int relay2=3;
+int relay3=4;
+int relay4=5;
+int relay5=7; 
+
+int buzzer=A0; 
+
+const int TriggerPin1 = 8; //Trig pin
+const int EchoPin1 = 9; //Echo pin
+long Duration1 = 0;
+
+const int TriggerPin2 =10 ; //Trig pin
+const int EchoPin2 = 11; //Echo pin
+long Duration2 = 0;
+
+const int TriggerPin3 = 13; //Trig pin
+const int EchoPin3 = 12; //Echo pin
+long Duration3 = 0;
+
+int mdelay=1000;
+
+String datain;
+ 
+void setup(){
+Serial.begin(9600); // Serial Output
+  lcd.init();
+
+  // Turn on the blacklight and print a message.
+  lcd.backlight();
+  
+  myservo.attach(6); 
+  myservo.write(0);
+  
+pinMode(relay1,OUTPUT);
+pinMode(relay2,OUTPUT);
+pinMode(relay3,OUTPUT);
+pinMode(relay4,OUTPUT);
+pinMode(relay5,OUTPUT);
+pinMode(buzzer,OUTPUT);  
+  pinMode(TriggerPin1,OUTPUT); // Trigger is an output pin
+  pinMode(EchoPin1,INPUT); // Echo is an input pin
+
+  pinMode(TriggerPin2,OUTPUT); // Trigger is an output pin
+  pinMode(EchoPin2,INPUT); // Echo is an input pin
+
+  pinMode(TriggerPin3,OUTPUT); // Trigger is an output pin
+  pinMode(EchoPin3,INPUT); // Echo is an input pin
+ 
+   }
+
+void loop(){
+//  control(); // Call All the Control
+   sensor1();
+   sensor2();
+   sensor3();
+ 
+    
+  if(Serial.available())
+  {
+    while(Serial.available() > 0)
+    {
+      char c = Serial.read(); 
+      datain +=c;
+      delay(10);
+      }
+      Serial.println(datain);
+
+      if(datain=="1")//if(datain=="1")
+      {
+        Serial.println("FORWARD ON");
+        digitalWrite(relay1,LOW);
+        digitalWrite(relay2,HIGH);
+        digitalWrite(relay3,LOW);
+        digitalWrite(relay4,HIGH);
+        }
+        else if(datain=="0")
+        {
+          digitalWrite(relay1,HIGH);
+          digitalWrite(relay2,HIGH);
+          digitalWrite(relay3,HIGH);
+          digitalWrite(relay4,HIGH);
+       //   digitalWrite(relay7,HIGH);
+          
+          Serial.println("FORWARD OFF");
+          }
+
+          else if(datain=="2")
+        {
+         // Serial.println("BACKWARD ON");
+          digitalWrite(relay1,HIGH);
+          digitalWrite(relay2,LOW);
+          digitalWrite(relay3,HIGH);
+          digitalWrite(relay4,LOW);
+
+          }
+          else if(datain=="3")
+        {
+          Serial.println("LEFT ON");
+          digitalWrite(relay1,LOW);
+          digitalWrite(relay2,HIGH);
+          digitalWrite(relay3,HIGH);
+           digitalWrite(relay4,HIGH);
+
+          }
+          else if(datain=="4")
+        {
+          Serial.println("RIGHT ON");
+          digitalWrite(relay1,HIGH);
+          digitalWrite(relay2,HIGH);
+          digitalWrite(relay3,LOW);
+          digitalWrite(relay4,HIGH);
+
+          }
+         datain="";
+    }
+}
+
+
+
+long Distance1(long time)
+{
+// Calculates the Distance in mm
+// ((time)*(Speed of sound))/ toward and backward of object) * 10
+
+long DistanceCalc1; // Calculation variable
+DistanceCalc1 = ((time /2.9) / 2); // Actual calculation in mm
+//DistanceCalc = time / 74 / 2; // Actual calculation in inches
+return DistanceCalc1; // return calculated value
+}
+
+long Distance2(long time)
+{
+// Calculates the Distance in mm
+// ((time)*(Speed of sound))/ toward and backward of object) * 10
+
+long DistanceCalc2; // Calculation variable
+DistanceCalc2 = ((time /2.9) / 2); // Actual calculation in mm
+//DistanceCalc = time / 74 / 2; // Actual calculation in inches
+return DistanceCalc2; // return calculated value
+}
+
+long Distance3(long time)
+{
+// Calculates the Distance in mm
+// ((time)*(Speed of sound))/ toward and backward of object) * 10
+
+long DistanceCalc3; // Calculation variable
+DistanceCalc3 = ((time /2.9) / 2); // Actual calculation in mm
+//DistanceCalc = time / 74 / 2; // Actual calculation in inches
+return DistanceCalc3; // return calculated value
+}
+
+ void sensor1()
+{
+digitalWrite(TriggerPin1, LOW);
+delayMicroseconds(2);
+digitalWrite(TriggerPin1, HIGH); // Trigger pin to HIGH
+delayMicroseconds(10); // 10us high
+digitalWrite(TriggerPin1, LOW); // Trigger pin to HIGH
+
+Duration1 = pulseIn(EchoPin1,HIGH); // Waits for the echo pin to get high
+// returns the Duration in microseconds
+long Distance_mm1 = Distance1(Duration1); // Use function to calculate the distance
+//Serial.print("Duration1 = ");
+//Serial.print(Duration1);
+//Serial.print("   ");
+//Serial.print("Distance1 = "); // Output to serial
+//Serial.print(Distance_mm1);
+//Serial.println(" mm");
+
+if(Distance_mm1<200)
+{ 
+  //lcd.clear();  
+  lcd.setCursor(0,0);
+  lcd.print("Target range:"); 
+  lcd.print(Distance_mm1);
+  
+  lcd.setCursor(0,1);
+  lcd.print("90 Degree detected");
+  delay(2000);
+ digitalWrite(buzzer,HIGH);
+     lcd.clear();  
+        lcd.setCursor(0,0);
+        lcd.print("Destroying"); 
+         digitalWrite(relay5,HIGH);
+  myservo.write(90);
+  delay( mdelay);
+
+ 
+           
+  }
+  else
+  {  lcd.clear();
+ digitalWrite(buzzer,LOW);
+  digitalWrite(relay5,LOW); 
+    }
+  }
+
+  void sensor2()
+  {
+//2ND ULTRASONIC SENSOR
+digitalWrite(TriggerPin2, LOW);
+delayMicroseconds(2);
+digitalWrite(TriggerPin2, HIGH); // Trigger pin to HIGH
+delayMicroseconds(10); // 10us high
+digitalWrite(TriggerPin2, LOW); // Trigger pin to HIGH
+
+Duration2 = pulseIn(EchoPin2,HIGH); // Waits for the echo pin to get high
+// returns the Duration in microseconds
+long Distance_mm2 = Distance2(Duration2); // Use function to calculate the distance
+//Serial.print("Duration2 = ");
+//Serial.print(Duration2);
+//Serial.print("   ");
+//Serial.print("Distance2 = "); // Output to serial
+//Serial.print(Distance_mm2);
+//Serial.println(" mm");
+
+if(Distance_mm2<200)
+{ lcd.clear();  
+  lcd.setCursor(0,0);
+  lcd.print("Target range:"); 
+  lcd.print(Distance_mm2);
+  
+  lcd.setCursor(0,1);
+  lcd.print("0 Degree detected");
+  delay(2000);
+  digitalWrite(buzzer,HIGH);
+      lcd.clear();  
+        lcd.setCursor(0,0);
+        lcd.print("Destroying"); 
+         digitalWrite(relay5,HIGH);
+  myservo.write(0);
+  delay( mdelay);
+
+  }
+  else
+  {  lcd.clear();
+ digitalWrite(buzzer,LOW);
+ digitalWrite(relay5,LOW);
+    }
+}
+  void sensor3()
+{
+digitalWrite(TriggerPin3, LOW);
+delayMicroseconds(2);
+digitalWrite(TriggerPin3, HIGH); // Trigger pin to HIGH
+delayMicroseconds(10); // 10us high
+digitalWrite(TriggerPin3, LOW); // Trigger pin to HIGH
+
+Duration3 = pulseIn(EchoPin3,HIGH); // Waits for the echo pin to get high
+// returns the Duration in microseconds
+long Distance_mm3 = Distance3(Duration3); // Use function to calculate the distance
+//Serial.print("Duration3 = ");
+//Serial.print(Duration3);
+//Serial.print("   ");
+//Serial.print("Distance3 = "); // Output to serial
+//Serial.print(Distance_mm3);
+//Serial.println(" mm");
+
+if(Distance_mm3<200)
+{ 
+  lcd.clear();  
+  lcd.setCursor(0,0);
+  lcd.print("Target range:"); 
+  lcd.print(Distance_mm3);
+  
+  lcd.setCursor(0,1);
+  lcd.print("180 Degree detected");
+ delay(2000); 
+ digitalWrite(buzzer,HIGH);
+      lcd.clear();  
+        lcd.setCursor(0,0);
+        lcd.print("Destroying"); 
+         digitalWrite(relay5,HIGH); 
+  myservo.write(180);
+  delay( mdelay);
+
+  }
+  else
+  {  lcd.clear();
+      digitalWrite(buzzer,LOW);
+      digitalWrite(relay5,LOW);
+    }
+ }
